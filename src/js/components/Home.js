@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import {authUser, findMatch, sendData} from '../actions/user';
+import {authUser, findMatch, sendData, authRealtime} from '../actions/user';
 
 class Home extends Component {
     state = {
@@ -46,6 +46,10 @@ class Home extends Component {
                         >Find opponent
                         </button>
                         <button className="btn btn-primary" type="button"
+                                onClick={() => this.props.authRealtime()}
+                        >Loggin realtime
+                        </button>
+                        <button className="btn btn-primary" type="button"
                                 onClick={() => this.props.sendData()}
                         >Send
                         </button>
@@ -66,6 +70,7 @@ const mapDispatchToProps = dispatch => {
     return {
         authUser: (IDFV) => authUser(IDFV)(dispatch),
         findMatch: () => findMatch()(dispatch),
+        authRealtime: () => authRealtime()(dispatch),
         sendData: () => sendData()(dispatch)
     }
 }

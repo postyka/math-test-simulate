@@ -4,9 +4,11 @@ import * as userActions from '../../actions/user';
 import * as userSaga from './user';
 
 import * as realtimeSaga from './realtime';
+import * as realtimeGameSaga from './realtime-game';
 
 export default function * rootSaga() {
     yield fork(realtimeSaga.socketTaskManager);
+    // yield fork(realtimeGameSaga.socketTaskManager);
     yield put({ type: 'WEBSOCKET_START_TASK' });
     yield all([
         bindUserActions(),
@@ -39,6 +41,7 @@ function * bindUserActions() {
     yield takeEvery(userActions.CHANGE_NAME_REQUEST, changeName);
     yield takeEvery(userActions.FIND_MATCH_REQUEST, userSaga.FindPendingMatchesRequest);
     yield takeEvery(userActions.CREATE_MATCH_REQUEST, userSaga.MatchmakingRequest);
+    yield takeEvery(userActions.LOGGED_REALTIME_REQUEST, realtimeSaga.LoginRealtimeRequest);
 
     yield takeEvery(userActions.SEND_DATA, userSaga.sendTestData);
 }

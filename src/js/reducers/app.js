@@ -41,6 +41,12 @@ const reducer = (state = initState, action) => {
                 sessionId: action.payload.sessionId
             }
         }
+		case user.STORE_REALTIME_SESSION: {
+			console.log(action);
+			return {...state,
+				realtimeSession: action.payload
+			}
+		}
 		default:
 			return state
 	}
@@ -48,5 +54,6 @@ const reducer = (state = initState, action) => {
 
 export const getUser = state => state.app.user;
 export const getSessionId = state => state.app.sessionId;
+export const getRealtimeSession = state => state.app.realtimeSession;
 
 export default reducer

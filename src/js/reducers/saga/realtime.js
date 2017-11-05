@@ -1,9 +1,9 @@
 import CryptoJS from 'crypto-js';
 import config from '../../config';
-import {getSessionId} from '../app';
+import {getSessionId, getRealtimeSession} from '../app';
 import {eventChannel} from 'redux-saga';
 import * as userActions from '../../actions/user';
-import GameSparksRT from 'gamesparks-sdk';
+import * as GameSparksRT from '../../lib/test';
 import {put, take, all, select, call, fork, race, cancel} from 'redux-saga/effects';
 
 export function * socketTaskManager() {
@@ -19,7 +19,6 @@ function * connectSocket() {
     while (true) {
         const { payload  } = yield take('WEBSOCKET_AUTH');
         try {
-            console.log('Start');
             const socket = new WebSocket(payload.uri);
             const channel = yield call(initSocketListener, socket, config.apiSecretKey);
             yield race({
@@ -37,9 +36,12 @@ function * connectSocket() {
 function * internalListener (socket) {
     while (true) {
         const { payload } = yield take('WEBSOCKET_SEND');
-        const sessionId = yield select(getSessionId);
-        payload['sessionId'] = sessionId;
+        if (payload.token === undefined) {
+            const sessionId = yield select(getSessionId);
+            payload['sessionId'] = sessionId;
+        }
         socket.send(JSON.stringify(payload));
+
     }
 }
 
@@ -49,6 +51,10 @@ function * externalListener (chanel, task) {
         if (action.type === 'REDIRECT') {
             yield put({ type: 'WEBSOCKET_START_TASK', payload: action.payload });
             yield cancel(task);
+        } else if (action.type === 'REDIRECT_REALTIME') {
+            let session = GameSparksRT.getSession(action.payload['accessToken'], action.payload['host'], action.payload['port'], {});
+            session.start();
+            session.update();
         } else {
             yield put({type: action.type, payload: action.payload});
         }
@@ -96,10 +102,9 @@ function initSocketListener(socket, secret) {
                     emit({ type: userActions.CREATE_MATCH_REQUEST });
                 }
             } else if (msg['@class'] === '.MatchFoundMessage') {
-                //redirectUri = 'wss://' + msg['host'] + ':' + msg['port'];
-                //emit({ type: 'REDIRECT', payload: { redirectUri }});
                 const session = GameSparksRT.getSession(msg['accessToken'], msg['host'], msg['port'], {});
-                console.log(session);
+                session.start();
+                //emit({ type: 'REALTIME_START_TASK', payload: msg });
             }
         };
 
@@ -111,14 +116,30 @@ function initSocketListener(socket, secret) {
             console.warn(event)
         };
 
-        socket.onclose = () => {
+        socket.onclose = (event) => {
             if(redirectUri) {
                 emit({ type: 'REDIRECT', payload: { redirectUri }});
             }
+            console.log(event)
         }
 
         return () => {
             socket.close()
         }
     });
+}
+
+export function * LoginRealtimeRequest(){
+    const realtimeSession = yield select(getRealtimeSession);
+
+    const body = {
+        "token": realtimeSession.accessToken,
+        "clientVersion": 2,
+        "opCode": 0,
+        "targetPlayers": [],
+    }
+
+    console.log(body);
+
+    yield put({type: 'WEBSOCKET_SEND', payload: body});
 }
