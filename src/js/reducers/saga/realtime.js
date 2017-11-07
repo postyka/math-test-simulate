@@ -1,9 +1,9 @@
 import CryptoJS from 'crypto-js';
 import config from '../../config';
-import {getSessionId, getRealtimeSession} from '../app';
 import {eventChannel} from 'redux-saga';
+import * as rt from '../../lib/gamesparks-rt';
 import * as userActions from '../../actions/user';
-import * as GameSparksRT from '../../lib/test';
+import {getSessionId, getRealtimeSession} from '../app';
 import {put, take, all, select, call, fork, race, cancel} from 'redux-saga/effects';
 
 export function * socketTaskManager() {
@@ -102,9 +102,10 @@ function initSocketListener(socket, secret) {
                     emit({ type: userActions.CREATE_MATCH_REQUEST });
                 }
             } else if (msg['@class'] === '.MatchFoundMessage') {
-                const session = GameSparksRT.getSession(msg['accessToken'], msg['host'], msg['port'], {});
-                session.start();
-                //emit({ type: 'REALTIME_START_TASK', payload: msg });
+                // const session = GameSparksRT.getSession(msg['accessToken'], msg['host'], msg['port'], {});
+                // session.start();
+                // session.update();
+                emit({ type: userActions.FIND_MATCH_SUCCESSED, payload: msg });
             }
         };
 

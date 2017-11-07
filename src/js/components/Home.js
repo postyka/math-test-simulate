@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import {authUser, findMatch, sendData, authRealtime} from '../actions/user';
+import {authUser, findMatch} from '../actions/user';
 
 class Home extends Component {
     state = {
@@ -9,13 +9,13 @@ class Home extends Component {
     }
 
     render() {
-        const {user} = this.props;
+        const {user, match} = this.props;
         const {IDFV, userInfo} = this.state;
 
         return (
             <div className="app row justify-content-md-center">
                 <div className="col-sm-8 col-sm-offset-2">
-                    <label>Authentication</label>
+                    <h3>Authentication</h3>
                     <div className="input-group">
                         <span className="input-group-addon" id="basic-addon1">IDFV device ID</span>
                         <input type="text" className="form-control" placeholder="IDFV"
@@ -39,21 +39,25 @@ class Home extends Component {
                         }
                     </div>
                     <hr/>
-                    <label>Game</label>
+                    <h3>Matchmaking</h3>
                     <div className="input-group">
                         <button className="btn btn-primary" type="button"
                                 onClick={() => this.props.findMatch()}
                         >Find opponent
                         </button>
-                        <button className="btn btn-primary" type="button"
-                                onClick={() => this.props.authRealtime()}
-                        >Loggin realtime
-                        </button>
-                        <button className="btn btn-primary" type="button"
-                                onClick={() => this.props.sendData()}
-                        >Send
-                        </button>
                     </div>
+                    <label>Match ID: {match ? match.matchId : 'No match'}</label>
+                    <hr/>
+                    <h3>Game</h3>
+                    <label>Round 1 of 10</label>
+                    <div className="question">Question</div>
+                    <div className="w3-light-grey">
+                        <div className="w3-green" style={{height:'24px', width:'25%'}}></div>
+                    </div>
+                    <div className="answer">Answer</div>
+                    <div className="answer">Answer</div>
+                    <div className="answer">Answer</div>
+                    <div className="answer">Answer</div>
                 </div>
             </div>
         )
@@ -63,6 +67,7 @@ class Home extends Component {
 const mapStateToProps = (state) => {
     return {
         user: state.app.user,
+        match: state.app.match,
     }
 }
 
@@ -70,8 +75,6 @@ const mapDispatchToProps = dispatch => {
     return {
         authUser: (IDFV) => authUser(IDFV)(dispatch),
         findMatch: () => findMatch()(dispatch),
-        authRealtime: () => authRealtime()(dispatch),
-        sendData: () => sendData()(dispatch)
     }
 }
 

@@ -14,9 +14,6 @@ export const FIND_MATCH_SUCCESSED = `${prefix}_find_match_successed`;
 
 export const STORE_SESSION_ID = `${prefix}_store_session_id`;
 export const STORE_REALTIME_SESSION = `${prefix}_store_realtime_session`;
-export const LOGGED_REALTIME_REQUEST = `${prefix}_logged_realtime_request`;
-
-export const SEND_DATA = `${prefix}_sen_data`;
 
 export const authUser = (uid) => {
     return (dispatch) => {
@@ -42,21 +39,5 @@ export const changeName = (name) => {
 			payload: { name },
 		});
 	}
-}
-
-export const sendData = () => {
-    return (dispatch) => {
-        dispatch({
-            type: SEND_DATA
-        });
-    }
-}
-
-export const authRealtime = () => {
-    return (dispatch) => {
-        dispatch({
-            type: LOGGED_REALTIME_REQUEST
-        });
-    }
 }
 

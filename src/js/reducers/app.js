@@ -41,10 +41,9 @@ const reducer = (state = initState, action) => {
                 sessionId: action.payload.sessionId
             }
         }
-		case user.STORE_REALTIME_SESSION: {
-			console.log(action);
+		case user.FIND_MATCH_SUCCESSED: {
 			return {...state,
-				realtimeSession: action.payload
+				match: action.payload
 			}
 		}
 		default:
