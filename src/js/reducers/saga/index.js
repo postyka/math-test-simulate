@@ -3,10 +3,12 @@ import {put, take, takeEvery, all, select, call, fork, race, cancel} from 'redux
 import * as userActions from '../../actions/user';
 import * as userSaga from './user';
 
+import * as websocketsSaga from './websockets';
 import * as realtimeSaga from './realtime';
 
 export default function * rootSaga() {
-    yield fork(realtimeSaga.socketTaskManager);
+    yield fork(websocketsSaga.socketTaskManager);
+    yield fork(realtimeSaga.realtimeTaskManager);
     yield put({ type: 'WEBSOCKET_START_TASK' });
     yield all([
         bindUserActions(),

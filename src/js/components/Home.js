@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
+import Game from './Game';
 import {authUser, findMatch} from '../actions/user';
 
 class Home extends Component {
@@ -48,16 +49,7 @@ class Home extends Component {
                     </div>
                     <label>Match ID: {match ? match.matchId : 'No match'}</label>
                     <hr/>
-                    <h3>Game</h3>
-                    <label>Round 1 of 10</label>
-                    <div className="question">Question</div>
-                    <div className="w3-light-grey">
-                        <div className="w3-green" style={{height:'24px', width:'25%'}}></div>
-                    </div>
-                    <div className="answer">Answer</div>
-                    <div className="answer">Answer</div>
-                    <div className="answer">Answer</div>
-                    <div className="answer">Answer</div>
+                    <Game/>
                 </div>
             </div>
         )

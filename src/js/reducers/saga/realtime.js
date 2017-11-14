@@ -1,30 +1,18 @@
-import CryptoJS from 'crypto-js';
-import config from '../../config';
+import myRTSession from '../my-rt-session';
 import {eventChannel} from 'redux-saga';
-import * as rt from '../../lib/gamesparks-rt';
-import * as userActions from '../../actions/user';
-import {getSessionId, getRealtimeSession} from '../app';
 import {put, take, all, select, call, fork, race, cancel} from 'redux-saga/effects';
+import * as gameActions from '../../actions/game';
 
-export function * socketTaskManager() {
-    while(true) {
-        const { payload } = yield take('WEBSOCKET_START_TASK');
-        const task = yield fork(connectSocket);
-        let uri = payload ? payload.redirectUri : config.apiUrlWS.replace('{apiKey}', config.apiKey);
-        yield put({ type: 'WEBSOCKET_AUTH', payload: { uri, task }});
-    }
-}
-
-function * connectSocket() {
+export function * realtimeTaskManager() {
     while (true) {
-        const { payload  } = yield take('WEBSOCKET_AUTH');
+        const {payload} = yield take('REALTIME_START');
         try {
-            const socket = new WebSocket(payload.uri);
-            const channel = yield call(initSocketListener, socket, config.apiSecretKey);
+            myRTSession.start(payload['accessToken'], payload['host'], payload['port']);
+            const channel = yield call(realtimeListener);
             yield race({
                 task: all([
-                    call(internalListener, socket),
-                    call(externalListener, channel, payload.task)
+                    call(internalListener),
+                    call(externalListener, channel)
                 ]),
             });
         } catch (e) {
@@ -33,114 +21,50 @@ function * connectSocket() {
     }
 }
 
-function * internalListener (socket) {
-    while (true) {
-        const { payload } = yield take('WEBSOCKET_SEND');
-        if (payload.token === undefined) {
-            const sessionId = yield select(getSessionId);
-            payload['sessionId'] = sessionId;
-        }
-        socket.send(JSON.stringify(payload));
 
+function * internalListener() {
+    while (true) {
+        const {payload} = yield take('REALTIME_SEND');
+        const data = RTData.get();
+        data.setLong(1, 100);
+        myRTSession.session.sendRTData(1, GameSparksRT.deliveryIntent.RELIABLE, data, []);
     }
 }
 
-function * externalListener (chanel, task) {
+function * externalListener(chanel) {
     while (true) {
         const action = yield take(chanel);
-        if (action.type === 'REDIRECT') {
-            yield put({ type: 'WEBSOCKET_START_TASK', payload: action.payload });
-            yield cancel(task);
-        } else if (action.type === 'REDIRECT_REALTIME') {
-            let session = GameSparksRT.getSession(action.payload['accessToken'], action.payload['host'], action.payload['port'], {});
-            session.start();
-            session.update();
-        } else {
-            yield put({type: action.type, payload: action.payload});
-        }
+        yield put({type: action.type, payload: action.payload});
     }
 }
 
-function initSocketListener(socket, secret) {
+function realtimeListener() {
     return eventChannel(emit => {
-        let authToken, redirectUri, sessionId;
-        socket.onmessage = (event) => {
-            // LOG
-            console.log(event);
-
-            let msg;
-            try {
-                msg = JSON.parse(event.data)
-            } catch (e) {
-                return;
-            }
-
-            if (msg['authToken']) {
-                authToken = msg['authToken']
-            }
-            if (msg['connectUrl']) {
-                redirectUri = msg['connectUrl']
-            }
-
-            if (msg['@class'] === '.AuthenticatedConnectResponse') {
-                if (msg['nonce']) {
-                    const reply = {
-                        '@class': '.AuthenticatedConnectRequest',
-                        hmac: CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256(msg['nonce'], secret))
+            myRTSession.onPacket = (packet) => {
+                let data = null;
+                for (let i = 0; i < GameSparksRT.MAX_RTDATA_SLOTS; i += 1) {
+                    if(packet.data.data[i].asString()) {
+                        data = JSON.parse(packet.data.data[i].asString().slice(1, -1));
+                        break;
                     }
-                    socket.send(JSON.stringify(reply))
-                } else if (msg['sessionId']) {
-                    socket.requestCounter = 0;
-                    socket.pendingRequests = {};
-                    socket.keepAliveInterval = setInterval(() => {
-                        socket.send(' ')
-                    }, 30000);
-                    emit({ type: userActions.STORE_SESSION_ID, payload:{ sessionId: msg['sessionId'] }});
                 }
-            } else if (msg['@class'] === '.FindPendingMatchesResponse') {
-                if(msg['error'] && msg['error']['match'] === 'NOT_IN_PROGRESS'){
-                    emit({ type: userActions.CREATE_MATCH_REQUEST });
+
+                if (myRTSession.onPacketCB != null) {
+                    myRTSession.onPacketCB(packet);
                 }
-            } else if (msg['@class'] === '.MatchFoundMessage') {
-                // const session = GameSparksRT.getSession(msg['accessToken'], msg['host'], msg['port'], {});
-                // session.start();
-                // session.update();
-                emit({ type: userActions.FIND_MATCH_SUCCESSED, payload: msg });
+
+                if (packet.opCode === 2) {
+                    emit({ type: gameActions.SET_QUESTIONS, payload: data});
+                }
+            };
+
+            const iv = setInterval(() => {
+                myRTSession.session.update();
+            }, 10);
+
+            return () => {
+                clearInterval(iv)
             }
-        };
-
-        socket.onopen = (event) => {
-            console.log(event);
         }
-
-        socket.onerror = (event) => {
-            console.warn(event)
-        };
-
-        socket.onclose = (event) => {
-            if(redirectUri) {
-                emit({ type: 'REDIRECT', payload: { redirectUri }});
-            }
-            console.log(event)
-        }
-
-        return () => {
-            socket.close()
-        }
-    });
-}
-
-export function * LoginRealtimeRequest(){
-    const realtimeSession = yield select(getRealtimeSession);
-
-    const body = {
-        "token": realtimeSession.accessToken,
-        "clientVersion": 2,
-        "opCode": 0,
-        "targetPlayers": [],
-    }
-
-    console.log(body);
-
-    yield put({type: 'WEBSOCKET_SEND', payload: body});
+    )
 }

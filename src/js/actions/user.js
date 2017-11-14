@@ -13,7 +13,6 @@ export const CREATE_MATCH_REQUEST = `${prefix}_create_match_request`;
 export const FIND_MATCH_SUCCESSED = `${prefix}_find_match_successed`;
 
 export const STORE_SESSION_ID = `${prefix}_store_session_id`;
-export const STORE_REALTIME_SESSION = `${prefix}_store_realtime_session`;
 
 export const authUser = (uid) => {
     return (dispatch) => {
