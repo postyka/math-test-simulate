@@ -1,5 +1,6 @@
-import React, {Component} from 'react';
 import {connect} from 'react-redux';
+import React, {Component} from 'react';
+import { sendAnswer } from '../actions/game';
 
 class Game extends Component {
     state = {
@@ -24,10 +25,18 @@ class Game extends Component {
         this.setState({ seconds: this.state.seconds + 0.01 });
     }
 
+    sendAnswer = (answerId) => {
+        console.log(answerId);
+    }
+
     renderAnswers = (answers) => {
         return answers.map(answer => {
            return (
-               <div className="answer" key={answer._id.$oid}>{answer.text}</div>
+               <div
+                   className="answer"
+                   key={answer._id.$oid}
+                   onClick={() => this.sendAnswer(answer._id.$oid)}
+               >{answer.text}</div>
            )
         });
     }
@@ -37,8 +46,9 @@ class Game extends Component {
         const {seconds} = this.state;
         if (started && questions.length) {
             return (
-                <div>
+                <div className="game">
                     <label>Round {round} of 10</label>
+                    <div className="popup"></div>
                     <div className="question">{questions[round - 1].text}</div>
                     <div className="w3-light-grey">
                         <div className="w3-green" style={{height: '24px', width: (seconds * 10) + '%'}}></div>
@@ -70,7 +80,9 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = dispatch => {
-    return {}
+    return {
+        sendAnswer: (answer) => sendAnswer(answer)(dispatch)
+    }
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Game);

@@ -34,4 +34,16 @@
 	.w3-light-grey {
 		margin-bottom: 10px;
 	}
+
+	.game {
+		padding: 18px;
+	}
+
+	.popup {
+		position: absolute;
+		width: 95%;
+		height: 50%;
+		background-color: rgba(100, 100, 100, 0.5);
+		margin: -15px;
+	}
 }

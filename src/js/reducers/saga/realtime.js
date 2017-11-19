@@ -68,3 +68,7 @@ function realtimeListener() {
         }
     )
 }
+
+export function * sendAnswer({ payload }) {
+    console.log(payload)
+}

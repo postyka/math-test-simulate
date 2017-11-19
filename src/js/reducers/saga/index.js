@@ -2,6 +2,7 @@ import {put, take, takeEvery, all, select, call, fork, race, cancel} from 'redux
 
 import * as userActions from '../../actions/user';
 import * as userSaga from './user';
+import * as realtimeActions from '../../actions/game';
 
 import * as websocketsSaga from './websockets';
 import * as realtimeSaga from './realtime';
@@ -41,4 +42,5 @@ function * bindUserActions() {
     yield takeEvery(userActions.CHANGE_NAME_REQUEST, changeName);
     yield takeEvery(userActions.FIND_MATCH_REQUEST, userSaga.FindPendingMatchesRequest);
     yield takeEvery(userActions.CREATE_MATCH_REQUEST, userSaga.MatchmakingRequest);
+    yield takeEvery(realtimeActions.SET_QUESTIONS, realtimeSaga.sendAnswer);
 }
