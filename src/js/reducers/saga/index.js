@@ -42,5 +42,5 @@ function * bindUserActions() {
     yield takeEvery(userActions.CHANGE_NAME_REQUEST, changeName);
     yield takeEvery(userActions.FIND_MATCH_REQUEST, userSaga.FindPendingMatchesRequest);
     yield takeEvery(userActions.CREATE_MATCH_REQUEST, userSaga.MatchmakingRequest);
-    yield takeEvery(realtimeActions.SET_QUESTIONS, realtimeSaga.sendAnswer);
+    yield takeEvery(realtimeActions.SEND_ANSWER, realtimeSaga.sendAnswer);
 }

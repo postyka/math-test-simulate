@@ -26,8 +26,8 @@ function * internalListener() {
     while (true) {
         const {payload} = yield take('REALTIME_SEND');
         const data = RTData.get();
-        data.setLong(1, 100);
-        myRTSession.session.sendRTData(1, GameSparksRT.deliveryIntent.RELIABLE, data, []);
+        data.setString(1, JSON.stringify(payload.data));
+        myRTSession.session.sendRTData(payload.number, GameSparksRT.deliveryIntent.RELIABLE, data, []);
     }
 }
 
@@ -55,6 +55,8 @@ function realtimeListener() {
 
                 if (packet.opCode === 2) {
                     emit({ type: gameActions.SET_QUESTIONS, payload: data});
+                } else if (packet.opCode === 4) {
+                    console.log(data);
                 }
             };
 
@@ -70,5 +72,8 @@ function realtimeListener() {
 }
 
 export function * sendAnswer({ payload }) {
-    console.log(payload)
+	  yield put({type: 'REALTIME_SEND', payload: {
+	      data: payload,
+        number: 3,
+		}});
 }
